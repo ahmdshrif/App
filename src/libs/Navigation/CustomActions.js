@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import {
-    CommonActions, StackActions, DrawerActions, getStateFromPath,
+    StackActions, getStateFromPath, getActionFromState, CommonActions,
 } from '@react-navigation/native';
 import lodashGet from 'lodash/get';
 import linkingConfig from './linkingConfig';
@@ -85,56 +85,48 @@ function getActiveState() {
  * More context here: https://github.com/react-navigation/react-navigation/issues/9744
  *
  * @param {String} route
- * @returns {Function}
  */
 function pushDrawerRoute(route) {
-    return (currentState) => {
-        // Parse the state, name, and params from the new route we want to navigate to.
-        const newStateFromRoute = getStateFromPath(route, linkingConfig.config);
-        const newScreenName = getScreenNameFromState(newStateFromRoute);
-        const newScreenParams = getParamsFromState(newStateFromRoute);
+    const rootState = getActiveState();
 
-        // When we are navigating away from a non-drawer navigator we need to first dismiss any screens pushed onto the main stack.
-        if (currentState.type !== 'drawer') {
-            navigateBackToRootDrawer();
-        }
+    // Parse the state, name, and params from the new route we want to navigate to.
+    const newStateFromRoute = getStateFromPath(route, linkingConfig.config);
+    const newScreenName = getScreenNameFromState(newStateFromRoute);
+    const newScreenParams = getParamsFromState(newStateFromRoute);
 
-        // If we're trying to navigate to the same screen that is already active there's nothing more to do except close the drawer.
-        // This prevents unnecessary re-rendering the screen and adding duplicate items to the browser history.
-        const activeState = getActiveState();
-        const activeScreenName = getScreenNameFromState(activeState);
-        const activeScreenParams = getParamsFromState(activeState);
-        if (newScreenName === activeScreenName && _.isEqual(activeScreenParams, newScreenParams)) {
-            return DrawerActions.closeDrawer();
-        }
-
-        let state = currentState;
-
-        // When navigating from non-Drawer navigator we switch to using the new state generated from the provided route. If we are navigating away from a non-Drawer navigator the
-        // currentState will not have a history field to use. By using the state from the route we create a "fresh state" that we can use to setup the browser history again.
-        // Note: A current limitation with this is that navigating "back" won't display the routes we have cleared out e.g. SearchPage and the history effectively gets "reset".
-        if (currentState.type !== 'drawer') {
-            state = newStateFromRoute;
-        }
-
-        const screenRoute = {type: 'route', name: newScreenName};
-        const history = _.map(state.history ? [...state.history] : [screenRoute], () => screenRoute);
-
-        // Force drawer to close and show
-        history.push({
-            type: 'drawer',
-            status: 'closed',
-        });
-
-        return CommonActions.reset({
-            ...state,
-            routes: [{
-                name: newScreenName,
-                params: newScreenParams,
-            }],
-            history,
-        });
+    const state = {
+        ...rootState.routes[0].state,
+        index: 0,
+        routes: [{
+            name: newScreenName,
+            params: newScreenParams,
+        }],
     };
+
+    const screenRoute = {type: 'route', name: newScreenName};
+    const history = _.map(state.history ? [...state.history] : [screenRoute], () => screenRoute);
+
+    // Force drawer to close and show
+    history.push({
+        type: 'drawer',
+        status: 'closed',
+    });
+    state.history = history;
+
+    if (rootState.routes.length > 1) {
+        const homRoute = {
+            ...rootState.routes[0],
+            state,
+        };
+
+        const action = getActionFromState({
+            index: 0,
+            routes: [homRoute],
+        });
+        navigationRef.current.dispatch(action);
+    } else {
+        navigationRef.current.dispatch(CommonActions.reset(state));
+    }
 }
 
 export default {

@@ -4,6 +4,7 @@ const defaultScreenOptions = {
     },
     headerShown: false,
     animationTypeForReplace: 'pop',
+    stale: true,
 };
 
 export default defaultScreenOptions;

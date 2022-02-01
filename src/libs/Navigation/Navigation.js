@@ -141,7 +141,7 @@ function navigate(route = ROUTES.HOME) {
     }
 
     if (isDrawerRoute(route)) {
-        navigationRef.current.dispatch(CustomActions.pushDrawerRoute(route));
+        CustomActions.pushDrawerRoute(route);
         return;
     }
 
