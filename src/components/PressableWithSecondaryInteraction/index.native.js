@@ -22,6 +22,7 @@ const PressableWithSecondaryInteraction = props => (
             props.onSecondaryInteraction(e);
         }}
         maxDist={20}
+        minDurationMs={props.inline ? 400 : 500}
     >
         <Pressable
             ref={props.forwardedRef}

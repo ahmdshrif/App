@@ -25,7 +25,6 @@ const CommentRender = (props) => {
     if (currentLine.length > 0) {
         lines.push(currentLine);
     }
-    console.log(props.tnode.toString());
 
     return (
         <View>
