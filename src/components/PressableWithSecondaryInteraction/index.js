@@ -35,6 +35,7 @@ class PressableWithSecondaryInteraction extends Component {
         if ((e.nativeEvent.state !== State.ACTIVE) || hasHoverSupport()) {
             return;
         }
+        e.preventDefault();
 
         // Map gesture event to normal Responder event
         const {
