@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import React from 'react';
-import {View} from 'react-native';
+import {View, Text} from 'react-native';
 import {
     TNodeRenderer,
 } from 'react-native-render-html';
@@ -25,12 +25,15 @@ const CommentRender = (props) => {
     if (currentLine.length > 0) {
         lines.push(currentLine);
     }
+    console.log(props.tnode.toString());
 
     return (
         <View>
             {_.map(lines, line => (
-                <View style={{alignContent: 'center', flexDirection: 'row'}}>
-                    { _.map(line, node => (<TNodeRenderer tnode={node} />))}
+                <View style={{alignContent: 'center', flexDirection: 'row', flexWrap: 'wrap'}}>
+                    { _.map(line, node => (
+                        <TNodeRenderer tnode={node} />
+                    ))}
                 </View>
             ))}
         </View>
