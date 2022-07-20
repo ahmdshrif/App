@@ -12,8 +12,10 @@ const propTypes = {
 };
 
 const CommentRender = (props) => {
+    const contentNode = props.tnode.children[0];
+
     // render image comment.
-    if (props.tnode.children[0].tagName === 'img') {
+    if (contentNode.tagName === 'img') {
         return (
             <View>
                 <TNodeChildrenRenderer tnode={props.tnode} />
@@ -24,8 +26,7 @@ const CommentRender = (props) => {
     // get lines on comment by splite <br> tag.
     const lines = [];
     let currentLine = [];
-    const nodes = props.tnode.children[0].children;
-    _.map(nodes, (node) => {
+    _.map(contentNode.children, (node) => {
         if (node.tagName !== 'br') {
             currentLine.push(node);
             return;
