@@ -221,13 +221,15 @@ class AttachmentModal extends PureComponent {
         const sourceURL = this.props.isAuthTokenRequired
             ? addEncryptedAuthTokenToURL(this.state.sourceURL)
             : this.state.sourceURL;
+        const isPDF = (this.props.sourceURL && Str.isPDF(this.props.sourceURL))
+        || (this.state.file && Str.isPDF(this.state.file.name || this.props.translate('attachmentView.unknownFilename')));
 
         // When the confirm button is visible we don't need bottom padding on the attachment view.
         const attachmentViewPaddingStyles = this.props.onConfirm
             ? [styles.pl5, styles.pr5, styles.pt5]
             : styles.p5;
 
-        const attachmentViewStyles = this.props.isSmallScreenWidth || this.props.isMediumScreenWidth
+        const attachmentViewStyles = this.props.isSmallScreenWidth || this.props.isMediumScreenWidth || isPDF
             ? [styles.imageModalImageCenterContainer]
             : [styles.imageModalImageCenterContainer, attachmentViewPaddingStyles];
 
@@ -244,6 +246,7 @@ class AttachmentModal extends PureComponent {
                     backgroundColor={themeColors.componentBG}
                     onModalHide={this.props.onModalHide}
                     propagateSwipe
+                    noContainerPadding={isPDF}
                 >
                     {this.props.isSmallScreenWidth && <HeaderGap />}
                     <HeaderWithCloseButton

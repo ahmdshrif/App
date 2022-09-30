@@ -5,6 +5,8 @@ import {windowDimensionsPropTypes} from '../withWindowDimensions';
 import stylePropTypes from '../../styles/stylePropTypes';
 
 const propTypes = {
+    noContainerPadding: PropTypes.bool,
+
     /** Decides whether the modal should cover fullscreen. FullScreen modal has backdrop */
     fullscreen: PropTypes.bool,
 
