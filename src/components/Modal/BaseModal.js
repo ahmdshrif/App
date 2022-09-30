@@ -122,17 +122,16 @@ class BaseModal extends PureComponent {
                             paddingLeft: safeAreaPaddingLeft,
                             paddingRight: safeAreaPaddingRight,
                         } = StyleUtils.getSafeAreaPadding(insets);
-                        const modalPaddingStyles = this.props.noContainerPadding ? {}
-                            : StyleUtils.getModalPaddingStyles({
-                                safeAreaPaddingTop,
-                                safeAreaPaddingBottom,
-                                safeAreaPaddingLeft,
-                                safeAreaPaddingRight,
-                                shouldAddBottomSafeAreaPadding,
-                                shouldAddTopSafeAreaPadding,
-                                modalContainerStylePaddingTop: modalContainerStyle.paddingTop,
-                                modalContainerStylePaddingBottom: modalContainerStyle.paddingBottom,
-                            });
+                        const modalPaddingStyles = StyleUtils.getModalPaddingStyles({
+                            safeAreaPaddingTop,
+                            safeAreaPaddingBottom,
+                            safeAreaPaddingLeft,
+                            safeAreaPaddingRight,
+                            shouldAddBottomSafeAreaPadding: this.props.noBottomContainerPadding ? false : shouldAddBottomSafeAreaPadding,
+                            shouldAddTopSafeAreaPadding,
+                            modalContainerStylePaddingTop: modalContainerStyle.paddingTop,
+                            modalContainerStylePaddingBottom: modalContainerStyle.paddingBottom,
+                        });
 
                         return (
                             <View

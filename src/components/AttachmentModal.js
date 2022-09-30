@@ -246,7 +246,7 @@ class AttachmentModal extends PureComponent {
                     backgroundColor={themeColors.componentBG}
                     onModalHide={this.props.onModalHide}
                     propagateSwipe
-                    noContainerPadding={isPDF}
+                    noBottomContainerPadding={isPDF}
                 >
                     {this.props.isSmallScreenWidth && <HeaderGap />}
                     <HeaderWithCloseButton
