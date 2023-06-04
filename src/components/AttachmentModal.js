@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useCallback, useMemo} from 'react';
 import PropTypes from 'prop-types';
 import {View, Animated, Keyboard} from 'react-native';
 import Str from 'expensify-common/lib/str';
@@ -98,10 +98,10 @@ const AttachmentModal = (props) => {
      * by setting sourceURL and file in state
      * @param {Object} attachmentData
      */
-    const onNavigate = (attachmentData) => {
+    const onNavigate = useCallback((attachmentData) => {
         setSource(attachmentData.source);
         setFile(attachmentData.file);    
-    };
+    }, [setSource, setFile]);
 
    /**
      * If our attachment is a PDF, return the unswipeable Modal type.
@@ -109,26 +109,27 @@ const AttachmentModal = (props) => {
      * @param {Object} _file
      * @returns {String}
      */
-    const getModalType = (sourceURL, _file) => sourceURL && (Str.isPDF(sourceURL) || (_file && Str.isPDF(_file.name || props.translate('attachmentView.unknownFilename'))))
+   const getModalType = useCallback((sourceURL, _file) => sourceURL && (Str.isPDF(sourceURL) || (_file && Str.isPDF(_file.name || props.translate('attachmentView.unknownFilename'))))
         ? CONST.MODAL.MODAL_TYPE.CENTERED_UNSWIPEABLE
-        : CONST.MODAL.MODAL_TYPE.CENTERED
-    
+        : CONST.MODAL.MODAL_TYPE.CENTERED,
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [props.translate]);
     /**
     * @param {String} sourceURL
     */
-    const downloadAttachment = (sourceURL) => {
+    const downloadAttachment = useCallback((sourceURL) => {
         const originalFileName = lodashGet(file, 'name') || props.originalFileName;
         fileDownload(sourceURL, originalFileName);
 
         // At ios, if the keyboard is open while opening the attachment, then after downloading
         // the attachment keyboard will show up. So, to fix it we need to dismiss the keyboard.
         Keyboard.dismiss();
-    }
+    }, [file, props.originalFileName]);
 
     /**
      * Execute the onConfirm callback and close the modal.
      */
-    const submitAndClose = () => {
+    const submitAndClose = useCallback(() => {
         // If the modal has already been closed or the confirm button is disabled
         // do not submit.
         if (!isModalOpen || isConfirmButtonDisabled) {
@@ -140,20 +141,22 @@ const AttachmentModal = (props) => {
         }
 
         setIsModalOpen(false);
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isModalOpen, isConfirmButtonDisabled, props.onConfirm, file, source]);
+
 
     /**
      * Close the confirm modal.
      */
-    const closeConfirmModal = () => {
+    const closeConfirmModal = useCallback(() => {
         setIsAttachmentInvalid(false);
-    }
+    }, []);
     
     /**
      * @param {Object} _file
      * @returns {Boolean}
      */
-    const isValidFile = (_file) => {
+    const isValidFile = useCallback((_file) => {
         const {fileExtension} = FileUtils.splitExtensionFromFileName(lodashGet(_file, 'name', ''));
         if (_.contains(CONST.API_ATTACHMENT_VALIDATIONS.UNALLOWED_EXTENSIONS, fileExtension.toLowerCase())) {
             const invalidReason = props.translate('attachmentPicker.notAllowedExtension');
@@ -179,12 +182,13 @@ const AttachmentModal = (props) => {
         }
 
         return true;
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [setIsAttachmentInvalid, setAttachmentInvalidReasonTitle, setAttachmentInvalidReason, props.translate]);
     
     /**
      * @param {Object} _file
      */
-    const validateAndDisplayFileToUpload = (_file) => {
+    const validateAndDisplayFileToUpload = useCallback((_file) => {
         if (!_file) {
             return;
         }
@@ -207,7 +211,7 @@ const AttachmentModal = (props) => {
             setFile(_file);
             setModalType(inputModalType);
         }
-    }
+    }, [isValidFile, getModalType]);
     
         /**
          * In order to gracefully hide/show the confirm button when the keyboard
@@ -217,7 +221,7 @@ const AttachmentModal = (props) => {
          *
          * @param {Boolean} shouldFadeOut If true, fade out confirm button. Otherwise fade in.
          */
-        const updateConfirmButtonVisibility = (shouldFadeOut) => {
+        const updateConfirmButtonVisibility = useCallback((shouldFadeOut) => {
             setIsConfirmButtonDisabled(shouldFadeOut);
             const toValue = shouldFadeOut ? 0 : 1;
 
@@ -226,14 +230,22 @@ const AttachmentModal = (props) => {
                 duration: 100,
                 useNativeDriver: true,
             }).start();
-        }
-        const sourceForAttachmentView = props.source || source;
+        }, [setIsConfirmButtonDisabled, confirmButtonFadeAnimation]);
+
+        /**
+         * close the modal
+         */
+        const closeModal = useCallback(() => {
+            setIsModalOpen(false);
+        }, [setIsModalOpen]);
+        
+        const sourceForAttachmentView = useMemo(() => props.source || source, [props.source, source]);
         return (
             <>
             <Modal
                 type={modalType}
                 onSubmit={submitAndClose}
-                onClose={() => setIsModalOpen(false)}
+                onClose={closeModal}
                 isVisible={isModalOpen}
                 backgroundColor={themeColors.componentBG}
                 onModalShow={() => {
@@ -252,7 +264,7 @@ const AttachmentModal = (props) => {
                     shouldShowBorderBottom
                     shouldShowDownloadButton={props.allowDownload}
                     onDownloadButtonPress={() => downloadAttachment(source)}
-                    onCloseButtonPress={() => setIsModalOpen(false)}
+                    onCloseButtonPress={closeModal}
                 />
                 <View style={styles.imageModalImageCenterContainer}>
                     {props.reportID ? (
@@ -307,9 +319,7 @@ const AttachmentModal = (props) => {
 
             {props.children({
                 displayFileInModal: validateAndDisplayFileToUpload,
-                show: () => {
-                    setIsModalOpen(true);
-                },
+                show: closeModal,
             })}
         </>
     );
