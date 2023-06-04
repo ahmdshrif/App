@@ -101,7 +101,7 @@ const AttachmentModal = (props) => {
     const onNavigate = useCallback((attachmentData) => {
         setSource(attachmentData.source);
         setFile(attachmentData.file);    
-    }, [setSource, setFile]);
+    }, []);
 
    /**
      * If our attachment is a PDF, return the unswipeable Modal type.
@@ -183,7 +183,7 @@ const AttachmentModal = (props) => {
 
         return true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [setIsAttachmentInvalid, setAttachmentInvalidReasonTitle, setAttachmentInvalidReason, props.translate]);
+    }, [props.translate]);
     
     /**
      * @param {Object} _file
@@ -230,15 +230,22 @@ const AttachmentModal = (props) => {
                 duration: 100,
                 useNativeDriver: true,
             }).start();
-        }, [setIsConfirmButtonDisabled, confirmButtonFadeAnimation]);
+        }, [confirmButtonFadeAnimation]);
 
         /**
          * close the modal
          */
         const closeModal = useCallback(() => {
             setIsModalOpen(false);
-        }, [setIsModalOpen]);
-        
+        }, []);
+
+        /**
+         *  open the modal
+         */
+        const openModal = useCallback(() => {
+            setIsModalOpen(true);
+        }, []);
+
         const sourceForAttachmentView = useMemo(() => props.source || source, [props.source, source]);
         return (
             <>
@@ -319,7 +326,7 @@ const AttachmentModal = (props) => {
 
             {props.children({
                 displayFileInModal: validateAndDisplayFileToUpload,
-                show: closeModal,
+                show: openModal,
             })}
         </>
     );
