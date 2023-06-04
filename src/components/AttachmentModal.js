@@ -227,7 +227,7 @@ const AttachmentModal = (props) => {
                 useNativeDriver: true,
             }).start();
         }
-
+        const sourceForAttachmentView = props.source || source;
         return (
             <>
             <Modal
@@ -263,11 +263,11 @@ const AttachmentModal = (props) => {
                             onToggleKeyboard={updateConfirmButtonVisibility}
                         />
                     ) : (
-                        Boolean(source) &&
+                        Boolean(sourceForAttachmentView) &&
                         shouldLoadAttachment && (
                             <AttachmentView
                                 containerStyles={[styles.mh5]}
-                                source={source}
+                                source={sourceForAttachmentView}
                                 isAuthTokenRequired={props.isAuthTokenRequired}
                                 file={file}
                                 onToggleKeyboard={updateConfirmButtonVisibility}
