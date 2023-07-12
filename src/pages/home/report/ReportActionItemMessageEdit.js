@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import _ from 'underscore';
 import ExpensiMark from 'expensify-common/lib/ExpensiMark';
 import Str from 'expensify-common/lib/str';
+import {runOnUI, runOnJS} from 'react-native-reanimated';
 import reportActionPropTypes from './reportActionPropTypes';
 import styles from '../../../styles/styles';
 import themeColors from '../../../styles/themes/default';
@@ -99,6 +100,15 @@ function ReportActionItemMessageEdit(props) {
     const textInputRef = useRef(null);
     const isFocusedRef = useRef(false);
     const insertedEmojis = useRef([]);
+    
+    const invokeFunctionFromUiThread = (callback) => {
+        runOnUI(() => {
+            // eslint-disable-next-line lines-around-directive
+            'worklet';
+            runOnJS(callback)();
+        })();
+    };
+
 
     useEffect(() => {
         // required for keeping last state of isFocused variable
@@ -343,7 +353,7 @@ function ReportActionItemMessageEdit(props) {
                     <View style={styles.editChatItemEmojiWrapper}>
                         <EmojiPickerButton
                             isDisabled={props.shouldDisableEmojiPicker}
-                            onModalHide={() => InteractionManager.runAfterInteractions(() => textInputRef.current.focus())}
+                            onModalHide={() => invokeFunctionFromUiThread(() =>  textInputRef.current.focus())}
                             onEmojiSelected={addEmojiToTextBox}
                             nativeID={emojiButtonID}
                         />
