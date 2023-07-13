@@ -306,9 +306,6 @@ class Composer extends React.Component {
      * @param {ClipboardEvent} event
      */
     handlePaste(event, isDocumentPaste = false) {
-        if (!this.props.checkComposerVisibility()) {
-            return;
-        }
 
         if (['INPUT', 'TEXTAREA'].includes(event.target.nodeName) && isDocumentPaste) {
             return;
