@@ -167,14 +167,14 @@ class Composer extends React.Component {
         // listeners here and unbind when the component unmounts
         if (this.textInput) {
             this.textInput.addEventListener('wheel', this.handleWheel);
-
+            this.textInput.addEventListener('paste', this.handlePaste);
             // we need to handle listeners on navigation focus/blur as Composer is not unmounting
             // when navigating away to different report
             this.unsubscribeFocus = this.props.navigation.addListener('focus', () => document.addEventListener('paste', this.handlePaste));
             this.unsubscribeBlur = this.props.navigation.addListener('blur', () => document.removeEventListener('paste', this.handlePaste));
 
             // We need to add paste listener manually as well as navigation focus event is not triggered on component mount
-            document.addEventListener('paste', this.handlePaste);
+            document.addEventListener('paste', (e)=>this.handlePaste(e, true));
         }
     }
 
@@ -305,12 +305,12 @@ class Composer extends React.Component {
      *
      * @param {ClipboardEvent} event
      */
-    handlePaste(event) {
+    handlePaste(event, isDocumentPaste = false) {
         if (!this.props.checkComposerVisibility()) {
             return;
         }
 
-        if (['INPUT', 'TEXTAREA'].includes(event.target.nodeName)) {
+        if (['INPUT', 'TEXTAREA'].includes(event.target.nodeName) && isDocumentPaste) {
             return;
         }
 
