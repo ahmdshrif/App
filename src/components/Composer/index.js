@@ -81,6 +81,9 @@ const propTypes = {
     /** Function to check whether composer is covered up or not */
     checkComposerVisibility: PropTypes.func,
 
+    /** Should we add a listener for DOM paste events */
+    shouldAddDomPasteListener: PropTypes.bool,
+
     ...withLocalizePropTypes,
 
     ...windowDimensionsPropTypes,
@@ -105,6 +108,7 @@ const defaultProps = {
         end: 0,
     },
     isFullComposerAvailable: false,
+    shouldAddDomPasteListener: false,
     setIsFullComposerAvailable: () => {},
     isComposerFullSize: false,
     shouldCalculateCaretPosition: false,
@@ -150,6 +154,7 @@ class Composer extends React.Component {
         this.textRef = React.createRef(null);
         this.unsubscribeBlur = () => null;
         this.unsubscribeFocus = () => null;
+        this.handleDocumentPasteEvent = this.handleDocumentPasteEvent.bind(this);
     }
 
     componentDidMount() {
@@ -168,13 +173,15 @@ class Composer extends React.Component {
         if (this.textInput) {
             this.textInput.addEventListener('wheel', this.handleWheel);
             this.textInput.addEventListener('paste', this.handlePaste);
-            // we need to handle listeners on navigation focus/blur as Composer is not unmounting
-            // when navigating away to different report
-            this.unsubscribeFocus = this.props.navigation.addListener('focus', () => document.addEventListener('paste', this.handlePaste));
-            this.unsubscribeBlur = this.props.navigation.addListener('blur', () => document.removeEventListener('paste', this.handlePaste));
+            if (this.props.shouldAddDomPasteListener) {
+                // we need to handle listeners on navigation focus/blur as Composer is not unmounting
+                // when navigating away to different report
+                this.unsubscribeFocus = this.props.navigation.addListener('focus', () => document.addEventListener('paste', this.handleDocumentPasteEvent));
+                this.unsubscribeBlur = this.props.navigation.addListener('blur', () => document.removeEventListener('paste', this.handleDocumentPasteEvent));
 
-            // We need to add paste listener manually as well as navigation focus event is not triggered on component mount
-            document.addEventListener('paste', (e)=>this.handlePaste(e, true));
+                // We need to add paste listener manually as well as navigation focus event is not triggered on component mount
+                document.addEventListener('paste', this.handleDocumentPasteEvent);
+            }
         }
     }
 
@@ -287,6 +294,14 @@ class Composer extends React.Component {
             this.textInput.focus();
             // eslint-disable-next-line no-empty
         } catch (e) {}
+    }
+
+    /**
+     * Handle paste event
+     * @param {ClipboardEvent} event
+     */
+    handleDocumentPasteEvent(e) {
+        this.handlePaste(e, true);
     }
 
     /**

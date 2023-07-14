@@ -1,4 +1,4 @@
-import React, {useEffect, useCallback, useRef, useMemo} from 'react';
+import React, {useEffect, useCallback, useRef, useMemo, useState} from 'react';
 import {StyleSheet} from 'react-native';
 import PropTypes from 'prop-types';
 import _ from 'underscore';
@@ -65,6 +65,7 @@ const defaultProps = {
 
 function Composer({shouldClear, onClear, isDisabled, maxLines, forwardedRef, isComposerFullSize, setIsFullComposerAvailable, ...props}) {
     const textInput = useRef(null);
+    const [isFocused, setIsFocused] = useState(false);
 
     /**
      * Set the TextInput Ref
@@ -121,6 +122,17 @@ function Composer({shouldClear, onClear, isDisabled, maxLines, forwardedRef, isC
             style={styles}
             /* eslint-disable-next-line react/jsx-props-no-spreading */
             {...props}
+            selection={isFocused ? props.selection : undefined}
+            onFocus={
+                () => {
+                    setIsFocused(true);
+                    props.onFocus && props.onFocus();
+            }}
+            onBlur={
+                () => {
+                    setIsFocused(false);
+                    props.onBlur && props.onBlur();
+            }}
             editable={!isDisabled}
         />
     );

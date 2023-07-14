@@ -1140,6 +1140,7 @@ class ReportActionCompose extends React.Component {
                                                 checkComposerVisibility={() => this.checkComposerVisibility()}
                                                 autoFocus={this.shouldAutoFocus}
                                                 multiline
+                                                shouldAddDomPasteListener
                                                 ref={this.setTextInputRef}
                                                 textAlignVertical="top"
                                                 placeholder={inputPlaceholder}
