@@ -301,7 +301,14 @@ class Composer extends React.Component {
      * @param {ClipboardEvent} event
      */
     handleDocumentPasteEvent(e) {
-        this.handlePaste(e, true);
+        if (!this.props.checkComposerVisibility()) {
+            return;
+        }
+        
+        if (['INPUT', 'TEXTAREA'].includes(event.target.nodeName)) {
+            return;
+        }
+        this.handlePaste(e);
     }
 
     /**
@@ -321,13 +328,7 @@ class Composer extends React.Component {
      * @param {ClipboardEvent} event
      */
     handlePaste(event, isDocumentPaste = false) {
-
-        if (['INPUT', 'TEXTAREA'].includes(event.target.nodeName) && isDocumentPaste) {
-            return;
-        }
-
         event.preventDefault();
-
         const {files, types} = event.clipboardData;
         const TEXT_HTML = 'text/html';
 
