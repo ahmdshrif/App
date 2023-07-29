@@ -191,9 +191,14 @@ class ReportActionCompose extends React.Component {
         this.setExceededMaxCommentLength = this.setExceededMaxCommentLength.bind(this);
         this.updateNumberOfLines = this.updateNumberOfLines.bind(this);
         this.showPopoverMenu = this.showPopoverMenu.bind(this);
+        this.onPickerCancel = this.onPickerCancel.bind(this);
+        this.onPickerDidOpen = this.onPickerDidOpen.bind(this);
+        this.onPickerWillOpen = this.onPickerWillOpen.bind(this);
+        this.onPickerGetFile = this.onPickerGetFile.bind(this);
         this.debouncedUpdateFrequentlyUsedEmojis = _.debounce(this.debouncedUpdateFrequentlyUsedEmojis.bind(this), 1000, false);
         this.comment = props.comment;
         this.insertedEmojis = [];
+        this.isGetFile = false;
 
         this.attachmentModalRef = React.createRef();
 
@@ -208,8 +213,9 @@ class ReportActionCompose extends React.Component {
         this.shouldAutoFocus = !props.modal.isVisible && (this.shouldFocusInputOnScreenFocus || this.isEmptyChat()) && props.shouldShowComposeInput;
 
         // These variables are used to decide whether to block the suggestions list from showing to prevent flickering
-        this.shouldBlockEmojiCalc = false;
-        this.shouldBlockMentionCalc = false;
+            this.shouldBlockEmojiCalc = false;
+            this.shouldBlockMentionCalc = false;
+        this.blockComposerFocus = false;
 
         // For mobile Safari, updating the selection prop on an unfocused input will cause it to automatically gain focus
         // and subsequent programmatic focus shifts (e.g., modal focus trap) to show the blue frame (:focus-visible style),
@@ -269,7 +275,14 @@ class ReportActionCompose extends React.Component {
         // We want to focus or refocus the input when a modal has been closed or the underlying screen is refocused.
         // We avoid doing this on native platforms since the software keyboard popping
         // open creates a jarring and broken UX.
-        if (this.willBlurTextInputOnTapOutside && !this.props.modal.isVisible && this.props.isFocused && (prevProps.modal.isVisible || !prevProps.isFocused)) {
+        if (
+            this.willBlurTextInputOnTapOutside &&
+            !this.props.modal.isVisible &&
+            this.props.isFocused &&
+            (prevProps.modal.isVisible || !prevProps.isFocused) &&
+            !this.props.disabled &&
+            !this.blockComposerFocus
+        ) {
             this.focus();
         }
 
@@ -305,6 +318,39 @@ class ReportActionCompose extends React.Component {
         }
         this.calculateEmojiSuggestion();
         this.calculateMentionSuggestion();
+    }
+
+    /**
+     * when image picker is closed, we need to focus on the input
+     */
+    onPickerCancel() {
+        this.blockComposerFocus = false;
+        this.shouldBlockEmojiCalc = false;
+        this.shouldBlockMentionCalc = false;
+        setTimeout(() => {
+            if (!this.isGetFile) {
+                this.focus();
+            }
+            this.isGetFile = false;
+        }, 1000);
+        console.log('onPickerCancel');
+    }
+
+    /**
+     * when image picker is opened, we need to blur the input
+     */
+    onPickerDidOpen() {
+        console.log('onPickerDidOpen');
+    }
+
+    onPickerGetFile() {
+        this.isGetFile = true;
+        console.log('onPickerGetFile');
+    }
+
+    onPickerWillOpen() {
+        this.blockComposerFocus = true;
+        console.log('onPickerWillOpen');
     }
 
     setUpComposeFocusManager() {
@@ -1019,7 +1065,12 @@ class ReportActionCompose extends React.Component {
                         >
                             {({displayFileInModal}) => (
                                 <>
-                                    <AttachmentPicker>
+                                    <AttachmentPicker
+                                        onPickerCancel={this.onPickerCancel}
+                                        onPickerDidOpen={this.onPickerDidOpen}
+                                        onPickerGetFile={this.onPickerGetFile}
+                                        onPickerWillOpen={this.onPickerWillOpen}
+                                    >
                                         {({openPicker}) => (
                                             <>
                                                 <View
