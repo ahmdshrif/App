@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import CONST from '../../CONST';
 import {propTypes, defaultProps} from './attachmentPickerPropTypes';
 
@@ -27,6 +27,39 @@ function getAcceptableFileTypes(type) {
 function AttachmentPicker(props) {
     const fileInput = useRef();
     const onPicked = useRef();
+    const [pickerWillOpen, setPickerWillOpen] = useState(false);
+    const onWindowFocus = useCallback(
+        (e) => {
+            props.onPickerCancel(e);
+            // if picker
+            window.removeEventListener('focus', onWindowFocus);
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [props.onPickerDidOpen],
+    );
+
+    const onWindowBlur = useCallback(
+        (e) => {
+            props.onPickerDidOpen(e);
+            setPickerWillOpen(false);
+            // if window is Focused when picker is opened, this mean that the picker was closed
+            window.addEventListener('focus', onWindowFocus);
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [props.onPickerDidOpen, onWindowFocus],
+    );
+
+    useEffect(() => {
+        if (!pickerWillOpen) {
+            return;
+        }
+        window.addEventListener('blur', onWindowBlur);
+        return () => {
+            window.removeEventListener('blur', onWindowBlur);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pickerWillOpen]);
+
     return (
         <>
             <input
@@ -39,6 +72,9 @@ function AttachmentPicker(props) {
                     if (file) {
                         file.uri = URL.createObjectURL(file);
                         onPicked.current(file);
+                        props.onPickerGetFile(file);
+                    } else {
+                        props.onPickerCancel(e);
                     }
 
                     // Cleanup after selecting a file to start from a fresh state
@@ -51,6 +87,8 @@ function AttachmentPicker(props) {
             />
             {props.children({
                 openPicker: ({onPicked: newOnPicked}) => {
+                    props.onPickerWillOpen();
+                    setPickerWillOpen(true);
                     onPicked.current = newOnPicked;
                     fileInput.current.click();
                 },
