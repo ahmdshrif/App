@@ -223,20 +223,26 @@ describe('Tests for group chat name', () => {
             .then(() => {
                 // Verify the sidebar links are rendered
                 const sidebarLinksHintText = translateLocal('sidebarScreen.listOfChats');
-                const sidebarLinks = screen.queryAllByLabelText(sidebarLinksHintText);
-                expect(sidebarLinks).toHaveLength(1);
-
-                // Verify there is only one option in the sidebar
-                const optionRows = screen.queryAllByAccessibilityHint(TestHelper.getNavigateToChatHintRegex());
-                expect(optionRows).toHaveLength(1);
-
-                const displayNameHintText = translateLocal('accessibilityHints.chatUserDisplayNames');
-                const displayNameText = screen.queryByLabelText(displayNameHintText);
-
-                expect(displayNameText?.props?.children?.[0]).toBe('A, B, C, D, E...');
-
-                return navigateToSidebarOption(0);
+                return waitFor(() => {
+                    const sidebarLinks = screen.queryAllByLabelText(sidebarLinksHintText);
+                    expect(sidebarLinks).toHaveLength(1);
+                });
             })
+            .then(() => {
+                // Verify there is only one option in the sidebar
+                return waitFor(() => {
+                    const optionRows = screen.queryAllByAccessibilityHint(TestHelper.getNavigateToChatHintRegex());
+                    expect(optionRows).toHaveLength(1);
+                });
+            })
+            .then(() => {
+                const displayNameHintText = translateLocal('accessibilityHints.chatUserDisplayNames');
+                return waitFor(() => {
+                    const displayNameText = screen.queryByLabelText(displayNameHintText);
+                    expect(displayNameText?.props?.children?.[0]).toBe('A, B, C, D, E...');
+                });
+            })
+            .then(() => navigateToSidebarOption(0))
             .then(waitForBatchedUpdates)
             .then(async () => {
                 await act(() => transitionEndCB?.());
