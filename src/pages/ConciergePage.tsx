@@ -1,6 +1,6 @@
-import {useFocusEffect, useRoute} from '@react-navigation/native';
+import {useFocusEffect, useNavigation, useRoute} from '@react-navigation/native';
 import React, {useCallback, useEffect, useRef} from 'react';
-import {View} from 'react-native';
+import {Platform, View} from 'react-native';
 import {useOnyx} from 'react-native-onyx';
 import ReportActionsSkeletonView from '@components/ReportActionsSkeletonView';
 import ReportHeaderSkeletonView from '@components/ReportHeaderSkeletonView';
@@ -12,7 +12,8 @@ import {confirmReadyToOpenApp} from '@libs/actions/App';
 import {navigateToConciergeChat} from '@libs/actions/Report';
 import {completeTask} from '@libs/actions/Task';
 import Navigation from '@libs/Navigation/Navigation';
-import CONST from '@src/CONST';
+import CONFIG from '@src/CONFIG';
+import CONST from '@src/ONYXKEYS';
 import ONYXKEYS from '@src/ONYXKEYS';
 import ROUTES from '@src/ROUTES';
 
@@ -29,10 +30,29 @@ function ConciergePage() {
     const [isLoadingReportData] = useOnyx(ONYXKEYS.IS_LOADING_REPORT_DATA, {initialValue: true});
     const route = useRoute();
     const {canUseLeftHandBar} = usePermissions();
+    const navigation = useNavigation();
 
     const [introSelected] = useOnyx(ONYXKEYS.NVP_INTRO_SELECTED);
     const viewTourTaskReportID = introSelected?.viewTour;
     const [viewTourTaskReport] = useOnyx(`${ONYXKEYS.COLLECTION.REPORT}${viewTourTaskReportID}`);
+
+    // Add iOS gesture handler to prevent LHN flickering during back gesture
+    useEffect(() => {
+        if (Platform.OS === 'ios' && CONFIG.IS_HYBRID_APP) {
+            const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+                if (e.data.action.type === 'GO_BACK') {
+                    // By using preventDefault, we block the default back navigation behavior
+                    // which shows the LHN briefly before navigation completes
+                    e.preventDefault();
+                    
+                    // Use Navigation.goBack which properly handles the transition
+                    Navigation.goBack();
+                }
+            });
+            
+            return unsubscribe;
+        }
+    }, [navigation]);
 
     useFocusEffect(
         useCallback(() => {
