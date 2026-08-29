@@ -41,7 +41,7 @@ import isLoadingOnyxValue from '@src/types/utils/isLoadingOnyxValue';
 import type {TextInputKeyPressEvent} from 'react-native';
 
 import React, {useCallback, useEffect, useRef} from 'react';
-import {View} from 'react-native';
+import {Platform, View} from 'react-native';
 
 type AddAgentPageProps = PlatformStackScreenProps<SettingsNavigatorParamList, typeof SCREENS.SETTINGS.AGENTS.ADD>;
 
@@ -58,7 +58,8 @@ function AddAgentPageContent({route, template}: AddAgentPageContentProps) {
     const {translate} = useLocalize();
     const styles = useThemeStyles();
     const {windowWidth, windowHeight} = useWindowDimensions();
-    const shouldUseScrollableLayout = useIsInLandscapeMode() || (isMobile() && windowWidth > windowHeight);
+    // The keyboard makes the viewport too short in every native orientation, and native has nothing that scrolls the focused input back into view, unlike the browser.
+    const shouldUseScrollableLayout = useIsInLandscapeMode() || (isMobile() && windowWidth > windowHeight) || Platform.OS !== 'web';
     const {accountID: ownerAccountID, login: ownerLogin, displayName} = useCurrentUserPersonalDetails();
     const defaultAgentName = template?.name ?? (displayName ? translate('addAgentPage.defaultAgentName', displayName) : undefined);
     const defaultPrompt = template?.prompt ?? translate('addAgentPage.defaultPrompt');

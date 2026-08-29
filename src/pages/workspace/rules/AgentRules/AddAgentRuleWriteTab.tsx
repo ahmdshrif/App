@@ -19,7 +19,7 @@ import INPUT_IDS from '@src/types/form/AddAgentRuleForm';
 import type {StyleProp, TextInputKeyPressEvent, ViewStyle} from 'react-native';
 
 import React, {useRef} from 'react';
-import {View} from 'react-native';
+import {Platform, View} from 'react-native';
 
 type AddAgentRuleFormID = typeof ONYXKEYS.FORMS.ADD_AGENT_RULE_FORM;
 
@@ -31,7 +31,7 @@ type AddAgentRuleWriteTabProps = {
 function AddAgentRuleWriteTab({onSave}: AddAgentRuleWriteTabProps) {
     const {translate} = useLocalize();
     const styles = useThemeStyles();
-    const shouldUseScrollableLayout = useIsInLandscapeMode();
+    const shouldUseScrollableLayout = useIsInLandscapeMode() || Platform.OS !== 'web';
     const {isBetaEnabled} = usePermissions();
     const isRulesRevampEnabled = isBetaEnabled(CONST.BETAS.RULES_REVAMP);
     const shouldUseExpandedRevampFormLayout = isRulesRevampEnabled && !shouldUseScrollableLayout;

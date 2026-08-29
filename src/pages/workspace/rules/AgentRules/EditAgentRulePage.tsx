@@ -32,7 +32,7 @@ import INPUT_IDS from '@src/types/form/EditAgentRuleForm';
 import type {StyleProp, TextInputKeyPressEvent, ViewStyle} from 'react-native';
 
 import React, {useRef} from 'react';
-import {View} from 'react-native';
+import {Platform, View} from 'react-native';
 
 type EditAgentRulePageProps = PlatformStackScreenProps<SettingsNavigatorParamList, typeof SCREENS.WORKSPACE.RULES_AGENT_EDIT>;
 type EditAgentRuleFormID = typeof ONYXKEYS.FORMS.EDIT_AGENT_RULE_FORM;
@@ -44,7 +44,7 @@ function EditAgentRulePage({
 }: EditAgentRulePageProps) {
     const {translate} = useLocalize();
     const styles = useThemeStyles();
-    const shouldUseScrollableLayout = useIsInLandscapeMode();
+    const shouldUseScrollableLayout = useIsInLandscapeMode() || Platform.OS !== 'web';
     const {showConfirmModal} = useConfirmModal();
     const {isBetaEnabled} = usePermissions();
     const isCustomAgentEnabled = isBetaEnabled(CONST.BETAS.CUSTOM_AGENT);

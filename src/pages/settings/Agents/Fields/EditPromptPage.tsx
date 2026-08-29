@@ -31,7 +31,7 @@ type EditPromptPageProps = PlatformStackScreenProps<SettingsNavigatorParamList, 
 function EditPromptPage({route}: EditPromptPageProps) {
     const {translate} = useLocalize();
     const styles = useThemeStyles();
-    const shouldUseScrollableLayout = useIsInLandscapeMode();
+    const shouldUseScrollableLayout = useIsInLandscapeMode() || Platform.OS !== 'web';
     const accountID = route.params.accountID;
     const [agentPrompt] = useOnyx(`${ONYXKEYS.COLLECTION.SHARED_NVP_AGENT_PROMPT}${accountID}`);
 
