@@ -14,7 +14,7 @@ import {useState} from 'react';
  * component's stable content child runs.
  */
 
-type SearchSectionsResult = {allReports: Array<string | undefined>; isSearchLoading: boolean; lastSearchQuery: undefined};
+type SearchSectionsResult = {allReports: Array<string | undefined>; isSearchLoading: boolean; lastSearchQuery: {offset?: number} | undefined};
 
 let mockSortedReportIDs: ReadonlyArray<string | undefined> = CONST.EMPTY_ARRAY;
 
@@ -65,9 +65,10 @@ const isSameReportList = (a: Array<string | undefined>, b: Array<string | undefi
 function useNavigationSource(reportID: string | undefined) {
     const {sortedReportIDs} = useSearchResultsContext();
     const contextReports = useFilterPendingDeleteReports(sortedReportIDs);
-    const {allReports: standaloneReports, isSearchLoading} = mockUseSearchSections();
+    const {allReports: standaloneReports, isSearchLoading, lastSearchQuery} = mockUseSearchSections();
 
-    const allReports = contextReports.length > 0 && !isSearchLoading ? contextReports : standaloneReports;
+    const shouldUseContextReports = contextReports.length > (lastSearchQuery?.offset ?? 0) && !isSearchLoading;
+    const allReports = shouldUseContextReports ? contextReports : standaloneReports;
     const liveCurrentIndex = allReports.indexOf(reportID);
 
     const [lastValidReports, setLastValidReports] = useState<Array<string | undefined> | null>(null);
@@ -76,7 +77,7 @@ function useNavigationSource(reportID: string | undefined) {
     }
     const effectiveAllReports = liveCurrentIndex === -1 && lastValidReports ? lastValidReports : allReports;
 
-    return {source: contextReports.length > 0 && !isSearchLoading ? 'fast' : 'full', allReports, effectiveAllReports};
+    return {source: shouldUseContextReports ? 'fast' : 'full', allReports, effectiveAllReports};
 }
 
 describe('MoneyRequestReportNavigation', () => {
@@ -116,6 +117,35 @@ describe('MoneyRequestReportNavigation', () => {
 
             expect(result.current.source).toBe('full');
             expect(result.current.allReports).toEqual(['1', '2', '3']);
+        });
+    });
+
+    describe('paging past the context list', () => {
+        const firstPage = Array.from({length: CONST.SEARCH.RESULTS_PAGE_SIZE}, (_, index) => `${index + 1}`);
+        const twoPages = Array.from({length: CONST.SEARCH.RESULTS_PAGE_SIZE * 2}, (_, index) => `${index + 1}`);
+
+        it('keeps the fast path when the report view has not paged past the context list', () => {
+            mockSortedReportIDs = firstPage;
+            mockUseSearchSections.mockReturnValue({allReports: firstPage, isSearchLoading: false, lastSearchQuery: {offset: 0}});
+
+            const {result} = renderHook(() => useNavigationSource('38'));
+
+            expect(result.current.source).toBe('fast');
+            expect(result.current.effectiveAllReports).toHaveLength(CONST.SEARCH.RESULTS_PAGE_SIZE);
+        });
+
+        it('walks the standalone list after the next page has landed, so report 51 is reachable', () => {
+            // Search screen is frozen behind the report, so the context list stays at the first page.
+            mockSortedReportIDs = firstPage;
+            // Page 2 was requested from the report view (offset 50) and has landed (loading is false again).
+            mockUseSearchSections.mockReturnValue({allReports: twoPages, isSearchLoading: false, lastSearchQuery: {offset: CONST.SEARCH.RESULTS_PAGE_SIZE}});
+
+            const {result} = renderHook(() => useNavigationSource('50'));
+
+            expect(result.current.source).toBe('full');
+            expect(result.current.effectiveAllReports).toHaveLength(CONST.SEARCH.RESULTS_PAGE_SIZE * 2);
+            const currentIndex = result.current.effectiveAllReports.indexOf('50');
+            expect(result.current.effectiveAllReports.at(currentIndex + 1)).toBe('51');
         });
     });
 

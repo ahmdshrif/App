@@ -124,7 +124,11 @@ function MoneyRequestReportNavigationContent({reportID, shouldDisplayNarrowVersi
     // the heavy subscriptions only on this slow path. Because this is a value swap inside a single, stable
     // component, toggling isSearchLoading (e.g. the search refresh triggered by submitting a report) no
     // longer unmounts the component and wipes the lastValidReports cache below.
-    const shouldUseContextReports = contextReports.length > 0 && !isSearchLoading;
+    // The context list is a snapshot of the Search screen, which is frozen behind this view. Once the report
+    // view has paged past it (offset is written as soon as the next page is requested), the snapshot-backed
+    // standalone list is the only one that contains the newly loaded reports.
+    const doesContextCoverLoadedPages = contextReports.length > (lastSearchQuery?.offset ?? 0);
+    const shouldUseContextReports = doesContextCoverLoadedPages && !isSearchLoading;
     const [standaloneReports, setStandaloneReports] = useState<Array<string | undefined>>([]);
     const allReports = shouldUseContextReports ? contextReports : standaloneReports;
 
