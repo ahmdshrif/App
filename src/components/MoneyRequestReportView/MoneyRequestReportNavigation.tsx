@@ -226,8 +226,12 @@ function MoneyRequestReportNavigationContent({reportID, shouldDisplayNarrowVersi
             });
         }
 
-        const nextIndex = (currentIndex + 1) % effectiveAllReports.length;
-        goToReportId(effectiveAllReports.at(nextIndex));
+        // On the last loaded report the next page may still be in flight. Wait for it instead of wrapping to the first report.
+        if (currentIndex + 1 >= effectiveAllReports.length) {
+            return;
+        }
+
+        goToReportId(effectiveAllReports.at(currentIndex + 1));
     };
 
     const goToPrevReport = () => {
